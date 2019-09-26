@@ -37,14 +37,29 @@ class presenceSensor:
     def __init__(self,environment):
         self.environment=environment
         self.information = environment.park.copy()
+        self.informationChange = {}
+
+    def updateinformationChange(self):
+        for e in self.environment.park:
+            if e in self.informationChange and self.information[e]==self.environment.park[e]:
+                del(self.informationChange[e])
+            elif self.information[e] != self.environment.park[e]:
+                self.updateInformation()
+                self.informationChange[e]=self.information[e]
+
+    def getinformationChange(self):
+        return self.informationChange
     def updateInformation(self):
+        self.information=self.environment.park.copy()
+
+   """ def updateInformation(self):
         for e in self.environment.park:
             if e in self.information and self.information[e]==self.environment.park[e]:
                 del(self.information[e])
             elif e in self.information and self.information[e]!=self.environment.park[e]:
               self.information[e]=self.environment.park[e]
             else:
-              self.information = self.environment.park.copy()
+              self.information = self.environment.park.copy() """
     def getInformation(self):
         self.updateInformation()
         return print(self.information)
