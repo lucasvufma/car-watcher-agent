@@ -1,4 +1,4 @@
-class Thing:
+"""class Thing:
     self.position= None
     def display(self , canvas, x, y, width, heigth):
         pass
@@ -11,7 +11,7 @@ class car(Thing):
     def __init__(behaviour):
         self.behaviour=behaviour
     def setPosition(position):
-        self.position=position
+        self.position=position"""
         
 class Agent:
     x=0
@@ -78,3 +78,38 @@ Environment1=Environment()
 presenceSensor1=presenceSensor(Environment1)
 Agent1=Agent(Environment1,presenceSensor1)
 Environment1.setState(0,"busy")
+
+
+
+class car():
+    def __init__(self,behaviour,carNumber):
+      self.carNumber=carNumber
+      self.behaviour=behaviour
+      self.position= None
+    def setPosition(self,position):
+      self.position=position
+    def getPosition(self):
+      return self.position
+    """def parking(self):"""
+
+class carBehaviour():
+  def __init__(self,environment):
+    self.environment=environment
+  def randomPark(self):
+    return random.randint(0,3)
+  def goPark(self,carNumber):
+    randomParkBehaviour=self.randomPark()
+    while (self.environment.park[randomParkBehaviour]==Park.BUSY.name):
+      time.sleep(2)
+      randomParkBehaviour=self.randomPark()
+    self.environment.park[randomParkBehaviour]=Park.BUSY.name
+    return randomParkBehaviour
+  def leftPark(self,position):
+    time.sleep(2)
+    self.environment.park[position]=Park.FREE.name
+
+
+
+
+b1=carBehaviour(Environment1)
+car1=car(b1,1)
