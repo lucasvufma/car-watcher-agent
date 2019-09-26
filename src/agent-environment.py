@@ -80,18 +80,6 @@ Agent1=Agent(Environment1,presenceSensor1)
 Environment1.setState(0,"busy")
 
 
-
-class car():
-    def __init__(self,behaviour,carNumber):
-      self.carNumber=carNumber
-      self.behaviour=behaviour
-      self.position= None
-    def setPosition(self,position):
-      self.position=position
-    def getPosition(self):
-      return self.position
-    """def parking(self):"""
-
 class carBehaviour():
   def __init__(self,environment):
     self.environment=environment
@@ -104,12 +92,40 @@ class carBehaviour():
       randomParkBehaviour=self.randomPark()
     self.environment.park[randomParkBehaviour]=Park.BUSY.name
     return randomParkBehaviour
-  def leftPark(self,position):
+  def leavePark(self,position):
     time.sleep(2)
     self.environment.park[position]=Park.FREE.name
 
 
+class car(carBehaviour):
+    def __init__(self,carNumber,environment):
+      super().__init__(environment)
+      self.carNumber=carNumber
+      self.position= None
+    def setPosition(self,position):
+      self.position=position
+    def getPosition(self):
+      return self.position
+    def getcarNumber(self):
+      return self.carNumber
+    """def parking(self):"""
+    def cargoPark(self):
+      self.position=self.goPark(self.carNumber)
+    def carleavePark(self):
+      self.leavePark(self.position)
+      self.setPosition(None)
+
+def EnvironmentSimulate(carNumber,seconds,Environment):
+  print("Simulation going started \n")
+  car1=car(carNumber,Environment)
+  print("Car going parking \n")
+  car1.cargoPark()
+  print("Car parked ",car1.getPosition())
+  print("Environment situation ",Environment.park)
+  time.sleep(random.randint(0,seconds))
+  print("Car leaving ")
+  car1.carleavePark()
+  print("Environment situation ",Environment.park)
 
 
-b1=carBehaviour(Environment1)
-car1=car(b1,1)
+EnvironmentSimulate("5",3,Environment1)
