@@ -122,6 +122,39 @@ class car(carBehaviour):
       self.leavePark(self.position)
       self.setPosition(None)
 
+    
+def EnvironmentSimulate(seconds,Environment,canvas,vectorPark):
+  for x in range(0,4):
+    carsNumbers.append("car"+str(x))
+  Car0=car(carsNumber[0],Environment)
+  Car1=car(carsNumbers[1],Environment)
+  Car2=car(carsNumber[0],Environment)
+  Car3=car(carsNumbers[1],Environment)
+  carObjects=[Car0,Car1,Car2,Car3]
+   print("Car going parking \n")
+  canvas.update()
+  for car in carObjects:
+    car.cargoPark()
+    print("Car parked ",car.getPosition())
+    canvas.itemconfig(vectorPark[car.getPosition()],fill="red")
+    canvas.update()
+    time.sleep(random.randint(0,3))
+    if (bool(random.getrandbits(1))):
+      print("Environment situation ",Environment.park)
+      print("Car leaving ")
+      canvas.itemconfig(vectorPark[car.getPosition()],fill="green")
+      car.carleavePark()
+      carObjects.delitem(car)
+      canvas.update()
+  for car in carObjects:
+    print("Car leaving ")
+    canvas.itemconfig(vectorPark[car.getPosition()],fill="green")
+    car.carleavePark()
+    carObjects.delitem(car)
+    canvas.update()
+  
+  
+'''
 def EnvironmentSimulate(seconds,Environment,canvas,vectorPark):
   print("Simulation going started \n")
   pool = ThreadPool(4)
@@ -142,7 +175,7 @@ def EnvironmentSimulate(seconds,Environment,canvas,vectorPark):
     Car.carleavePark()
     canvas.update()
     print("Environment situation ",Environment.park)
-  
+'''
 
 
 
