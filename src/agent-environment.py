@@ -16,6 +16,8 @@ from enum import Enum;
 import random;
 import time;
 from tkinter import *
+from multiprocessing import Pool
+from multiprocessing.dummy import Pool as ThreadPool
 
 class Park(Enum):
   BUSY= True
@@ -122,24 +124,25 @@ class car(carBehaviour):
 
 def EnvironmentSimulate(seconds,Environment,canvas,vectorPark):
   print("Simulation going started \n")
+  pool = ThreadPool(4)
   for x in range(6):
     count=0
-    carNumber=car+str(count)
+    carNumber="car"+str(count)
     canvas.update()
-    car=car(carNumber,Environment)
+    Car=car(carNumber,Environment)
     print("Car going parking \n")
-    car.cargoPark()
-    print("Car parked ",car1.getPosition())
-    canvas.itemconfig(vectorPark[car1.getPosition()],fill="red")
+    Car.cargoPark()
+    print("Car parked ",Car.getPosition())
+    canvas.itemconfig(vectorPark[Car.getPosition()],fill="red")
     canvas.update()
     print("Environment situation ",Environment.park)
     time.sleep(random.randint(0,seconds))
     print("Car leaving ")
-    canvas.itemconfig(vectorPark[car1.getPosition()],fill="green")
-    car1.carleavePark()
+    canvas.itemconfig(vectorPark[Car.getPosition()],fill="green")
+    Car.carleavePark()
     canvas.update()
     print("Environment situation ",Environment.park)
-
+  
 
 
 
@@ -156,7 +159,7 @@ p1=w.create_rectangle(0,100,100,200,fill="green")
 p2=w.create_rectangle(0,200,100,300,fill="green")
 vectorPark =[p0,p1,p2]
 w.pack()
-master.after(100000,EnvironmentSimulate("2",5,Environment1,w,vectorPark))
+master.after(100000,EnvironmentSimulate(5,Environment1,w,vectorPark))
 master.mainloop()
 
 
