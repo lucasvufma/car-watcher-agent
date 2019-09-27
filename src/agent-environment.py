@@ -75,7 +75,7 @@ class presenceSensor:
 class Environment:
   def __init__(self):
     self.things = []
-    self.park= {0:"FREE",1:"BUSY",2:"FREE",3:"BUSY"}
+    self.park= {0:"FREE",1:"FREE",2:"FREE",3:"FREE"}
   def setState(self,index,state):
     self.park[index]=state
   def getState(self,index):
@@ -84,7 +84,7 @@ class Environment:
 Environment1=Environment()
 presenceSensor1=presenceSensor(Environment1)
 Agent1=Agent(Environment1,presenceSensor1)
-Environment1.setState(0,"BUSY")
+Environment1.setState(0,"FREE")
 
 
 class carBehaviour():
@@ -124,34 +124,39 @@ class car(carBehaviour):
 
     
 def EnvironmentSimulate(seconds,Environment,canvas,vectorPark):
+  carsNumbers=[]
   for x in range(0,4):
     carsNumbers.append("car"+str(x))
-  Car0=car(carsNumber[0],Environment)
+  Car0=car(carsNumbers[0],Environment)
   Car1=car(carsNumbers[1],Environment)
-  Car2=car(carsNumber[0],Environment)
-  Car3=car(carsNumbers[1],Environment)
+  Car2=car(carsNumbers[2],Environment)
+  Car3=car(carsNumbers[3],Environment)
   carObjects=[Car0,Car1,Car2,Car3]
-   print("Car going parking \n")
+  print("Car going parking \n")
   canvas.update()
-  for car in carObjects:
-    car.cargoPark()
-    print("Car parked ",car.getPosition())
-    canvas.itemconfig(vectorPark[car.getPosition()],fill="red")
+  for Car in carObjects:
+    Car.cargoPark()
+    print("Car parked ",Car.getPosition())
+    canvas.itemconfig(vectorPark[Car.getPosition()],fill="red")
     canvas.update()
     time.sleep(random.randint(0,3))
     if (bool(random.getrandbits(1))):
       print("Environment situation ",Environment.park)
       print("Car leaving ")
-      canvas.itemconfig(vectorPark[car.getPosition()],fill="green")
-      car.carleavePark()
-      carObjects.delitem(car)
+      canvas.itemconfig(vectorPark[Car.getPosition()],fill="green")
+      Car.carleavePark()
+      carObjects.remove(Car)
+      print("Environment situation ",Environment.park)
       canvas.update()
-  for car in carObjects:
+  for Car in carObjects:
     print("Car leaving ")
-    canvas.itemconfig(vectorPark[car.getPosition()],fill="green")
-    car.carleavePark()
-    carObjects.delitem(car)
-    canvas.update()
+    if Car.getPosition() is not None:
+      print("in Conditional Environment situation ",Environment.park)
+      print(carObjects)
+      canvas.itemconfig(vectorPark[Car.getPosition()],fill="green")
+      Car.carleavePark()
+      carObjects.remove(Car)
+      canvas.update()
   
   
 '''
@@ -190,9 +195,10 @@ w = Canvas(master,
 p0=w.create_rectangle(0,0,100,100,fill="green")
 p1=w.create_rectangle(0,100,100,200,fill="green")
 p2=w.create_rectangle(0,200,100,300,fill="green")
-vectorPark =[p0,p1,p2]
+p3=w.create_rectangle(100,0,200,100,fill="green")
+vectorPark =[p0,p1,p2,p3]
 w.pack()
-master.after(100000,EnvironmentSimulate(5,Environment1,w,vectorPark))
+master.after(1000,EnvironmentSimulate(5,Environment1,w,vectorPark))
 master.mainloop()
 
 
