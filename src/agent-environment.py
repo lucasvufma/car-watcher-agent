@@ -12,7 +12,20 @@ class car(Thing):
         self.behaviour=behaviour
     def setPosition(position):
         self.position=position"""
-        
+from enum import Enum;
+import random;
+import time;
+from tkinter import *
+
+class Park(Enum):
+  BUSY= True
+  FREE= False
+  def getPark(boolean):
+    if boolean==True:
+      return Park.BUSY
+    else:
+      return Park.FREE
+
 class Agent:
     x=0
     y=0
@@ -52,14 +65,6 @@ class presenceSensor:
     def updateInformation(self):
         self.information=self.environment.park.copy()
 
-   """ def updateInformation(self):
-        for e in self.environment.park:
-            if e in self.information and self.information[e]==self.environment.park[e]:
-                del(self.information[e])
-            elif e in self.information and self.information[e]!=self.environment.park[e]:
-              self.information[e]=self.environment.park[e]
-            else:
-              self.information = self.environment.park.copy() """
     def getInformation(self):
         self.updateInformation()
         return print(self.information)
@@ -68,7 +73,7 @@ class presenceSensor:
 class Environment:
   def __init__(self):
     self.things = []
-    self.park= {0:"free",1:"busy",2:"free",3:"busy"}
+    self.park= {0:"FREE",1:"BUSY",2:"FREE",3:"BUSY"}
   def setState(self,index,state):
     self.park[index]=state
   def getState(self,index):
@@ -77,7 +82,7 @@ class Environment:
 Environment1=Environment()
 presenceSensor1=presenceSensor(Environment1)
 Agent1=Agent(Environment1,presenceSensor1)
-Environment1.setState(0,"busy")
+Environment1.setState(0,"BUSY")
 
 
 class carBehaviour():
@@ -115,17 +120,47 @@ class car(carBehaviour):
       self.leavePark(self.position)
       self.setPosition(None)
 
-def EnvironmentSimulate(carNumber,seconds,Environment):
+def EnvironmentSimulate(seconds,Environment,canvas,vectorPark):
   print("Simulation going started \n")
-  car1=car(carNumber,Environment)
-  print("Car going parking \n")
-  car1.cargoPark()
-  print("Car parked ",car1.getPosition())
-  print("Environment situation ",Environment.park)
-  time.sleep(random.randint(0,seconds))
-  print("Car leaving ")
-  car1.carleavePark()
-  print("Environment situation ",Environment.park)
+  for x in range(6):
+    count=0
+    carNumber=car+str(count)
+    canvas.update()
+    car=car(carNumber,Environment)
+    print("Car going parking \n")
+    car.cargoPark()
+    print("Car parked ",car1.getPosition())
+    canvas.itemconfig(vectorPark[car1.getPosition()],fill="red")
+    canvas.update()
+    print("Environment situation ",Environment.park)
+    time.sleep(random.randint(0,seconds))
+    print("Car leaving ")
+    canvas.itemconfig(vectorPark[car1.getPosition()],fill="green")
+    car1.carleavePark()
+    canvas.update()
+    print("Environment situation ",Environment.park)
 
 
-EnvironmentSimulate("5",3,Environment1)
+
+
+master = Tk()
+
+canvas_width = 400
+canvas_height = 400
+w = Canvas(master, 
+           width=canvas_width,
+           height=canvas_height)
+
+p0=w.create_rectangle(0,0,100,100,fill="green")
+p1=w.create_rectangle(0,100,100,200,fill="green")
+p2=w.create_rectangle(0,200,100,300,fill="green")
+vectorPark =[p0,p1,p2]
+w.pack()
+master.after(100000,EnvironmentSimulate("2",5,Environment1,w,vectorPark))
+master.mainloop()
+
+
+
+
+
+
