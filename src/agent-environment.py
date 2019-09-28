@@ -37,16 +37,26 @@ class Agent:
         self.presenceSensor=presenceSensor
 
     """a ideia aqui é ter um dicionario com chaves representando as percepções e ele vá agindo perante a elas"""
-    def actuate(self):
+    def actuate(self,canvas,vectorPark):
         for e in self.perceptions:
-            if self.perceptions[e]==self.environment.getState(e):
-                del(self.perceptions[e])
-                pass
+          if self.perceptions[e]==self.environment.getState(e):
+            del(self.perceptions[e])
+            pass
+          else:
+            self.environment.setState(e,self.perceptions[e])
+            if(self.perceptions[e]=="FREE"):
+              console.log("Perceptions",self.perceptions)
+              canvas.itemconfig(vectorPark[e],fill="yellow")
+              canvas.update()
             else:
-                self.environment.setState(e,self.perceptions[e])
-                del(self.perceptions[e])
+              console.log("Perceptions",self.perceptions)
+              canvas.itemconfig(vectorPark[e],fill="blue")
+              canvas.update()
+              del(self.perceptions[e])
     def percept(self):
-        self.perceptions=self.presenceSensor.getInformation()
+        self.perceptions=self.presenceSensor.getinformationChange()
+    def getPerceptions(self):
+      return self.perceptions
 
 class presenceSensor:
     def __init__(self,environment):
@@ -123,7 +133,7 @@ class car(carBehaviour):
       self.setPosition(None)
 
     
-def EnvironmentSimulate(seconds,Environment,canvas,vectorPark):
+def EnvironmentSimulate(seconds,Environment,canvas,vectorPark,Agent,presenceSensor):
   carsNumbers=[]
   for x in range(0,4):
     carsNumbers.append("car"+str(x))
@@ -139,6 +149,7 @@ def EnvironmentSimulate(seconds,Environment,canvas,vectorPark):
     print("Car parked ",Car.getPosition())
     canvas.itemconfig(vectorPark[Car.getPosition()],fill="red")
     canvas.update()
+    AgentEnvironmentProgram(Environment,w,vectorPark,Agent,presenceSensor)
     time.sleep(random.randint(0,3))
     if (bool(random.getrandbits(1))):
       print("Environment situation ",Environment.park)
@@ -148,6 +159,7 @@ def EnvironmentSimulate(seconds,Environment,canvas,vectorPark):
       carObjects.remove(Car)
       print("Environment situation ",Environment.park)
       canvas.update()
+      AgentEnvironmentProgram(Environment,w,vectorPark,Agent,presenceSensor)
   for Car in carObjects:
     print("Car leaving ")
     if Car.getPosition() is not None:
@@ -157,32 +169,22 @@ def EnvironmentSimulate(seconds,Environment,canvas,vectorPark):
       Car.carleavePark()
       carObjects.remove(Car)
       canvas.update()
+      AgentEnvironmentProgram(Environment,w,vectorPark,Agent,presenceSensor)
   
   
-'''
-def EnvironmentSimulate(seconds,Environment,canvas,vectorPark):
-  print("Simulation going started \n")
-  pool = ThreadPool(4)
-  for x in range(6):
-    count=0
-    carNumber="car"+str(count)
-    canvas.update()
-    Car=car(carNumber,Environment)
-    print("Car going parking \n")
-    Car.cargoPark()
-    print("Car parked ",Car.getPosition())
-    canvas.itemconfig(vectorPark[Car.getPosition()],fill="red")
-    canvas.update()
-    print("Environment situation ",Environment.park)
-    time.sleep(random.randint(0,seconds))
-    print("Car leaving ")
-    canvas.itemconfig(vectorPark[Car.getPosition()],fill="green")
-    Car.carleavePark()
-    canvas.update()
-    print("Environment situation ",Environment.park)
-'''
 
 
+def AgentEnvironmentProgram(Environment,canvas,vectorPark,Agent,presenceSensor):
+  print("Okay im here")
+  while(True):
+    presenceSensor.updateInformation()
+    print(presenceSensor.getinformationChange())
+    presenceSensor.getInformation()
+    presenceSensor.updateinformationChange()
+    print("Tou percebendo algo")
+    print(Environment.park)
+    Agent.percept()
+    Agent.actuate(canvas,vectorPark)
 
 master = Tk()
 
@@ -198,7 +200,7 @@ p2=w.create_rectangle(0,200,100,300,fill="green")
 p3=w.create_rectangle(100,0,200,100,fill="green")
 vectorPark =[p0,p1,p2,p3]
 w.pack()
-master.after(1000,EnvironmentSimulate(5,Environment1,w,vectorPark))
+EnvironmentSimulate(5,Environment1,w,vectorPark,Agent1,presenceSensor1)
 master.mainloop()
 
 
