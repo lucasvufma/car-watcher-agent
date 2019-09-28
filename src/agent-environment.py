@@ -15,9 +15,9 @@ class car(Thing):
 from enum import Enum;
 import random;
 import time;
-from tkinter import *
-from multiprocessing import Pool
-from multiprocessing.dummy import Pool as ThreadPool
+from tkinter import *;
+import multiprocessing
+from multiprocessing import Process, Manager
 
 class Park(Enum):
   BUSY= True
@@ -37,21 +37,31 @@ class Agent:
         self.presenceSensor=presenceSensor
 
     """a ideia aqui é ter um dicionario com chaves representando as percepções e ele vá agindo perante a elas"""
-    def actuate(self):
+    def actuate(self,canvas,vectorPark):
         for e in self.perceptions:
             if self.perceptions[e]==self.environment.getState(e):
                 del(self.perceptions[e])
                 pass
             else:
                 self.environment.setState(e,self.perceptions[e])
+                if(self.perceptions[e]=="FREE"):
+                  console.log("Perceptions",self.perceptions)
+                  canvas.itemconfig(vectorPark[e],fill="yellow")
+                  canvas.update()
+                else:
+                  console.log("Perceptions",self.perceptions)
+                  canvas.itemconfig(vectorPark[e],fill="blue")
+                  canvas.update()
                 del(self.perceptions[e])
     def percept(self):
-        self.perceptions=self.presenceSensor.getInformation()
+        self.perceptions=self.presenceSensor.getinformationChange()
+    def getPerceptions(self):
+      return self.perceptions
 
 class presenceSensor:
     def __init__(self,environment):
         self.environment=environment
-        self.information = environment.park.copy()
+        self.information = environment.park
         self.informationChange = {}
 
     def updateinformationChange(self):
@@ -65,26 +75,32 @@ class presenceSensor:
     def getinformationChange(self):
         return self.informationChange
     def updateInformation(self):
-        self.information=self.environment.park.copy()
+        self.information=self.environment.park
 
     def getInformation(self):
         self.updateInformation()
         return print(self.information)
 
-
 class Environment:
-  def __init__(self):
+  def __init__(self,manager):
     self.things = []
-    self.park= {0:"FREE",1:"FREE",2:"FREE",3:"FREE"}
+    self.park=manager
   def setState(self,index,state):
     self.park[index]=state
   def getState(self,index):
     return self.park[index]
+  def getPark(self):
+    return self.park
 
-Environment1=Environment()
+
+
+manager=Manager()
+z=manager.dict()
+z = {0:"FREE",1:"FREE",2:"FREE",3:"FREE"}
+Environment1=Environment(z)
 presenceSensor1=presenceSensor(Environment1)
 Agent1=Agent(Environment1,presenceSensor1)
-Environment1.setState(0,"FREE")
+
 
 
 class carBehaviour():
@@ -94,14 +110,14 @@ class carBehaviour():
     return random.randint(0,3)
   def goPark(self,carNumber):
     randomParkBehaviour=self.randomPark()
-    while (self.environment.park[randomParkBehaviour]==Park.BUSY.name):
+    while (self.environment.getPark()[randomParkBehaviour]==Park.BUSY.name):
       time.sleep(2)
       randomParkBehaviour=self.randomPark()
-    self.environment.park[randomParkBehaviour]=Park.BUSY.name
+    self.environment.getPark()[randomParkBehaviour]=Park.BUSY.name
     return randomParkBehaviour
   def leavePark(self,position):
     time.sleep(2)
-    self.environment.park[position]=Park.FREE.name
+    self.environment.getPark()[position]=Park.FREE.name
 
 
 class car(carBehaviour):
@@ -141,66 +157,60 @@ def EnvironmentSimulate(seconds,Environment,canvas,vectorPark):
     canvas.update()
     time.sleep(random.randint(0,3))
     if (bool(random.getrandbits(1))):
-      print("Environment situation ",Environment.park)
+ 
       print("Car leaving ")
       canvas.itemconfig(vectorPark[Car.getPosition()],fill="green")
       Car.carleavePark()
       carObjects.remove(Car)
-      print("Environment situation ",Environment.park)
+    
       canvas.update()
   for Car in carObjects:
     print("Car leaving ")
     if Car.getPosition() is not None:
-      print("in Conditional Environment situation ",Environment.park)
-      print(carObjects)
       canvas.itemconfig(vectorPark[Car.getPosition()],fill="green")
       Car.carleavePark()
       carObjects.remove(Car)
       canvas.update()
   
-  
-'''
-def EnvironmentSimulate(seconds,Environment,canvas,vectorPark):
-  print("Simulation going started \n")
-  pool = ThreadPool(4)
-  for x in range(6):
-    count=0
-    carNumber="car"+str(count)
-    canvas.update()
-    Car=car(carNumber,Environment)
-    print("Car going parking \n")
-    Car.cargoPark()
-    print("Car parked ",Car.getPosition())
-    canvas.itemconfig(vectorPark[Car.getPosition()],fill="red")
-    canvas.update()
-    print("Environment situation ",Environment.park)
-    time.sleep(random.randint(0,seconds))
-    print("Car leaving ")
-    canvas.itemconfig(vectorPark[Car.getPosition()],fill="green")
-    Car.carleavePark()
-    canvas.update()
-    print("Environment situation ",Environment.park)
-'''
 
+def AgentEnvironmentProgram(Environment,presenceSensor,Agent,canvas,vectorPark):
+  print("Okay im here")
+  while(True):
+    presenceSensor.updateInformation()
+    print(presenceSensor.getinformationChange())
+    presenceSensor.getInformation()
+    presenceSensor.updateinformationChange()
+    print("Tou percebendo algo")
+    print(Environment.park)
+    Agent.percept()
+    Agent.actuate(canvas,vectorPark)
+    print(Agent.getPerceptions())
+    time.sleep(1)
 
 
 master = Tk()
-
 canvas_width = 400
 canvas_height = 400
 w = Canvas(master, 
-           width=canvas_width,
-           height=canvas_height)
-
+                width=canvas_width,
+                height=canvas_height)
 p0=w.create_rectangle(0,0,100,100,fill="green")
 p1=w.create_rectangle(0,100,100,200,fill="green")
 p2=w.create_rectangle(0,200,100,300,fill="green")
 p3=w.create_rectangle(100,0,200,100,fill="green")
 vectorPark =[p0,p1,p2,p3]
 w.pack()
-master.after(1000,EnvironmentSimulate(5,Environment1,w,vectorPark))
-master.mainloop()
 
+  
+
+t1=multiprocessing.Process(target=EnvironmentSimulate, args=(5,Environment1,w,vectorPark))
+t1.start()
+q=multiprocessing.Queue()
+t2=multiprocessing.Process(target=AgentEnvironmentProgram, args=(Environment1,presenceSensor1,Agent1,w,vectorPark))
+t2.start()
+t1.join()
+t2.join()
+master.mainloop()
 
 
 
