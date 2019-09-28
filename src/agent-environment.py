@@ -1,23 +1,9 @@
-"""class Thing:
-    self.position= None
-    def display(self , canvas, x, y, width, heigth):
-        pass
-    def position(self):
-        return self.position
 
-class car(Thing):
-    self.position=None
-    self.behaviour=None
-    def __init__(behaviour):
-        self.behaviour=behaviour
-    def setPosition(position):
-        self.position=position"""
 from enum import Enum;
 import random;
 import time;
 from tkinter import *
-from multiprocessing import Pool
-from multiprocessing.dummy import Pool as ThreadPool
+
 
 class Park(Enum):
   BUSY= True
@@ -34,19 +20,37 @@ class Agent:
     def __init__(self,environment,presenceSensor):
         self.perceptions= {}
         self.environment=environment
+        self.previousInformation={}
         self.presenceSensor=presenceSensor
 
     """a ideia aqui é ter um dicionario com chaves representando as percepções e ele vá agindo perante a elas"""
-    def actuate(self):
-        for e in self.perceptions:
-            if self.perceptions[e]==self.environment.getState(e):
+    def actuate(self,canvas,vectorPark,agentFisico):
+        for e in self.perceptions.copy():
+            if self.perceptions[e]==self.previousInformation[e]:
                 del(self.perceptions[e])
                 pass
             else:
-                self.environment.setState(e,self.perceptions[e])
+                print("Change canvas", e,self.perceptions[e])
+                if self.perceptions[e]=="FREE":
+                    canvas.itemconfig(vectorPark[e],stipple="gray50",outline="blue")
+                    canvas.itemconfig(agentFisico,fill="blue")
+                    canvas.update()
+                    time.sleep(0.5)
+                    canvas.itemconfig(vectorPark[e],stipple="",outline="black")
+                    canvas.itemconfig(agentFisico,fill="white")
+                    canvas.update()
+                else:
+                    canvas.itemconfig(vectorPark[e],stipple="gray50",outline="blue")
+                    canvas.itemconfig(agentFisico,fill="blue")
+                    canvas.update()
+                    time.sleep(0.5)
+                    canvas.itemconfig(vectorPark[e],stipple="",outline="black")
+                    canvas.itemconfig(agentFisico,fill="white")
+                    canvas.update()
                 del(self.perceptions[e])
     def percept(self):
-        self.perceptions=self.presenceSensor.getInformation()
+        self.previousInformation=self.presenceSensor.getInformation()
+        self.perceptions=self.presenceSensor.getinformationChange().copy()
 
 class presenceSensor:
     def __init__(self,environment):
@@ -63,19 +67,19 @@ class presenceSensor:
                 self.informationChange[e]=self.information[e]
 
     def getinformationChange(self):
-        return self.informationChange
+      self.updateinformationChange()
+      return self.informationChange
     def updateInformation(self):
         self.information=self.environment.park.copy()
 
     def getInformation(self):
-        self.updateInformation()
-        return print(self.information)
+        return self.information
 
 
 class Environment:
   def __init__(self):
     self.things = []
-    self.park= {0:"FREE",1:"FREE",2:"FREE",3:"FREE"}
+    self.park= {0:"FREE",1:"FREE",2:"FREE",3:"FREE",4:"FREE",5:"FREE",6:"FREE",7:"FREE"}
   def setState(self,index,state):
     self.park[index]=state
   def getState(self,index):
@@ -91,7 +95,7 @@ class carBehaviour():
   def __init__(self,environment):
     self.environment=environment
   def randomPark(self):
-    return random.randint(0,3)
+    return random.randint(0,7)
   def goPark(self,carNumber):
     randomParkBehaviour=self.randomPark()
     while (self.environment.park[randomParkBehaviour]==Park.BUSY.name):
@@ -121,69 +125,52 @@ class car(carBehaviour):
     def carleavePark(self):
       self.leavePark(self.position)
       self.setPosition(None)
-
-    
-def EnvironmentSimulate(seconds,Environment,canvas,vectorPark):
+def AgentProgram(Agent,presenceSensor,canvas,vectorPark,agentFisico):
+    Agent.percept()
+    Agent.actuate(canvas,vectorPark,agentFisico)
+def EnvironmentSimulate(seconds,Environment,canvas,vectorPark,Agent,presenceSensor,agentFisico):
   carsNumbers=[]
-  for x in range(0,4):
+  for x in range(0,8):
     carsNumbers.append("car"+str(x))
   Car0=car(carsNumbers[0],Environment)
   Car1=car(carsNumbers[1],Environment)
   Car2=car(carsNumbers[2],Environment)
   Car3=car(carsNumbers[3],Environment)
-  carObjects=[Car0,Car1,Car2,Car3]
+  Car4=car(carsNumbers[4],Environment)
+  Car5=car(carsNumbers[5],Environment)
+  Car6=car(carsNumbers[6],Environment)
+  Car7=car(carsNumbers[7],Environment)
+
+  carObjects=[Car0,Car1,Car2,Car3,Car4,Car5,Car6,Car7]
   print("Car going parking \n")
   canvas.update()
   for Car in carObjects:
     Car.cargoPark()
     print("Car parked ",Car.getPosition())
-    canvas.itemconfig(vectorPark[Car.getPosition()],fill="red")
+    canvas.itemconfig(vectorPark[Car.getPosition()],fill="red",stipple="")
     canvas.update()
+    AgentProgram(Agent,presenceSensor,canvas,vectorPark,agentFisico)
     time.sleep(random.randint(0,3))
     if (bool(random.getrandbits(1))):
       print("Environment situation ",Environment.park)
       print("Car leaving ")
-      canvas.itemconfig(vectorPark[Car.getPosition()],fill="green")
+      canvas.itemconfig(vectorPark[Car.getPosition()],fill="green",stipple="")
       Car.carleavePark()
       carObjects.remove(Car)
       print("Environment situation ",Environment.park)
       canvas.update()
+      AgentProgram(Agent,presenceSensor,canvas,vectorPark,agentFisico)
   for Car in carObjects:
     print("Car leaving ")
     if Car.getPosition() is not None:
       print("in Conditional Environment situation ",Environment.park)
-      print(carObjects)
       canvas.itemconfig(vectorPark[Car.getPosition()],fill="green")
       Car.carleavePark()
       carObjects.remove(Car)
       canvas.update()
+      AgentProgram(Agent,presenceSensor,canvas,vectorPark,agentFisico)
+      print(Environment.park)
   
-  
-'''
-def EnvironmentSimulate(seconds,Environment,canvas,vectorPark):
-  print("Simulation going started \n")
-  pool = ThreadPool(4)
-  for x in range(6):
-    count=0
-    carNumber="car"+str(count)
-    canvas.update()
-    Car=car(carNumber,Environment)
-    print("Car going parking \n")
-    Car.cargoPark()
-    print("Car parked ",Car.getPosition())
-    canvas.itemconfig(vectorPark[Car.getPosition()],fill="red")
-    canvas.update()
-    print("Environment situation ",Environment.park)
-    time.sleep(random.randint(0,seconds))
-    print("Car leaving ")
-    canvas.itemconfig(vectorPark[Car.getPosition()],fill="green")
-    Car.carleavePark()
-    canvas.update()
-    print("Environment situation ",Environment.park)
-'''
-
-
-
 master = Tk()
 
 canvas_width = 400
@@ -196,13 +183,16 @@ p0=w.create_rectangle(0,0,100,100,fill="green")
 p1=w.create_rectangle(0,100,100,200,fill="green")
 p2=w.create_rectangle(0,200,100,300,fill="green")
 p3=w.create_rectangle(100,0,200,100,fill="green")
-vectorPark =[p0,p1,p2,p3]
+agentFisico=w.create_rectangle(100,100,200,200,fill="white")
+p4=w.create_rectangle(100,200,200,300,fill="green")
+p5=w.create_rectangle(200,0,300,100,fill="green")
+p6=w.create_rectangle(200,100,300,200,fill="green")
+p7=w.create_rectangle(200,200,300,300,fill="green")
+
+vectorPark =[p0,p1,p2,p3,p4,p5,p6,p7]
 w.pack()
-master.after(1000,EnvironmentSimulate(5,Environment1,w,vectorPark))
+master.after(1000,EnvironmentSimulate(5,Environment1,w,vectorPark,Agent1,presenceSensor1,agentFisico))
 master.mainloop()
-
-
-
 
 
 
